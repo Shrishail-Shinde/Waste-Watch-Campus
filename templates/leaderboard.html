@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard - D.Y. Patil Campus Waste Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-trophy me-2"></i>Campus Waste Management Leaderboard</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead mb-4">
+                    This leaderboard recognizes the departments that are most active in reporting waste issues across the campus.
+                    Higher reporting indicates greater awareness and participation in keeping our campus clean.
+                </p>
+                
+
+                
+                <!-- College-wise Leaderboards -->
+                <h2 class="mb-4">College-wise Department Rankings</h2>
+                
+                <div class="row">
+                    {% for college_name, departments in college_data.items() %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100 {% if 'Engineering' in college_name %}border-primary{% 
+                                                  elif 'Junior College' in college_name %}border-success{% 
+                                                  elif 'International' in college_name %}border-warning{% 
+                                                  elif 'Architecture' in college_name %}border-danger{% 
+                                                  else %}border-info{% endif %}">
+                            <div class="card-header {% if 'Engineering' in college_name %}bg-primary{% 
+                                                     elif 'Junior College' in college_name %}bg-success{% 
+                                                     elif 'International' in college_name %}bg-warning text-dark{% 
+                                                     elif 'Architecture' in college_name %}bg-danger{% 
+                                                     else %}bg-info{% endif %} text-white">
+                                <h5 class="mb-0">
+                                    {% if 'Engineering' in college_name %}<i class="fas fa-cogs me-2"></i>{% 
+                                    elif 'Junior College' in college_name %}<i class="fas fa-graduation-cap me-2"></i>{% 
+                                    elif 'International' in college_name %}<i class="fas fa-globe-americas me-2"></i>{% 
+                                    elif 'Architecture' in college_name %}<i class="fas fa-drafting-compass me-2"></i>{% 
+                                    else %}<i class="fas fa-robot me-2"></i>{% endif %}
+                                    {{ college_name }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if departments %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Rank</th>
+                                                <th scope="col">Department</th>
+                                                <th scope="col">Reports</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for dept in departments %}
+                                            <tr class="{% if loop.index == 1 %}table-warning{% 
+                                                       elif loop.index == 2 %}table-info{% 
+                                                       elif loop.index == 3 %}table-success{% 
+                                                       endif %}">
+                                                <td class="text-center">
+                                                    <span class="badge rounded-pill 
+                                                        {% if loop.index == 1 %}bg-warning text-dark{% 
+                                                        elif loop.index == 2 %}bg-info{% 
+                                                        elif loop.index == 3 %}bg-success{% 
+                                                        else %}bg-secondary{% endif %}">
+                                                        {{ loop.index }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if loop.index == 1 %}<i class="fas fa-trophy me-1 text-warning"></i>{% endif %}
+                                                    {{ dept.department.name }}
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress me-2" style="width: 100px; height: 10px;">
+                                                            {% set max_reports = departments[0].report_count if departments[0].report_count > 0 else 1 %}
+                                                            {% set percentage = (dept.report_count / max_reports) * 100 %}
+                                                            <div class="progress-bar 
+                                                                {% if 'Engineering' in college_name %}bg-primary{% 
+                                                                elif 'Junior College' in college_name %}bg-success{% 
+                                                                elif 'International' in college_name %}bg-warning{% 
+                                                                elif 'Architecture' in college_name %}bg-danger{% 
+                                                                else %}bg-info{% endif %}" 
+                                                                role="progressbar" 
+                                                                style="width: {{ percentage }}%;" 
+                                                                aria-valuenow="{{ percentage }}" 
+                                                                aria-valuemin="0" 
+                                                                aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        <span class="fw-bold">{{ dept.report_count }}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>No department data available for this college.
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer text-muted">
+                                <small><i class="fas fa-info-circle me-1"></i> {{ departments|length }} departments contributing</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Motivational Section -->
+                <div class="card mt-3 bg-dark text-white">
+                    <div class="card-body text-center py-4">
+                        <h4 class="mb-3"><i class="fas fa-leaf me-2"></i>Join the Waste Management Initiative</h4>
+                        <p class="mb-3">
+                            Every report counts! Help keep our campus clean and sustainable by actively 
+                            reporting waste issues and encouraging others to participate.
+                        </p>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+                            <i class="fas fa-map-marked-alt me-1"></i>Explore Campus Map
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-light">
+                            <i class="fas fa-user-plus me-1"></i>Register Now
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
