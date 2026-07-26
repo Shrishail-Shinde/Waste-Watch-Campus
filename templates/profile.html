@@ -31,7 +31,7 @@
                             <h2 class="mb-1">
                                 {% set resolved = namespace(count=0) %}
                                 {% for report in reports %}
-                                    {% if report.status == 'Resolved' %}
+                                    {% if report.status == 'completed' %}
                                         {% set resolved.count = resolved.count + 1 %}
                                     {% endif %}
                                 {% endfor %}

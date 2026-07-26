@@ -63,8 +63,8 @@ def get_status_badge_class(status):
     Return the appropriate Bootstrap badge class for a given status
     """
     status_classes = {
-        'Pending': 'bg-warning',
-        'In Progress': 'bg-info',
-        'Resolved': 'bg-success'
+        'pending': 'bg-warning',
+        'in_progress': 'bg-info',
+        'completed': 'bg-success'
     }
     return status_classes.get(status, 'bg-secondary')

@@ -242,7 +242,10 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or not next_page.startswith('/'):
-            next_page = url_for('index')
+            if user.user_type == 'cleaning_staff':
+                next_page = url_for('staff_dashboard')
+            else:
+                next_page = url_for('index')
         return redirect(next_page)
     
     return render_template('login.html', form=form)
@@ -312,6 +315,9 @@ def room(room_id):
 @app.route('/report/<int:room_id>', methods=['GET', 'POST'])
 @login_required
 def report(room_id):
+    if current_user.user_type == 'cleaning_staff':
+        flash('Cleaning staff accounts cannot submit waste reports.', 'warning')
+        return redirect(url_for('staff_dashboard'))
     room = Room.query.get_or_404(room_id)
     form = ReportForm()
     
@@ -328,7 +334,7 @@ def report(room_id):
                 room_id=room.id,
                 user_id=current_user.id,
                 waste_type='Unknown',
-                status='Pending'
+                status='pending'
             )
             logger.debug(f"Created report object with room_id: {report.room_id}")
             db.session.add(report)
@@ -379,6 +385,31 @@ def report(room_id):
             logger.debug(f"Form validation failed: {form.errors}")
 
     return render_template('report.html', form=form, room=room)
+
+@app.route('/staff/dashboard')
+@login_required
+def staff_dashboard():
+    if current_user.user_type != 'cleaning_staff':
+        flash('That page is only available to cleaning staff.', 'warning')
+        return redirect(url_for('index'))
+
+    # Order so the worst / oldest pending jobs surface first
+    severity_rank = {'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3, 'Unknown': 4}
+    pending_reports = WasteReport.query.filter_by(status='pending').order_by(WasteReport.created_at.asc()).all()
+    pending_reports.sort(key=lambda r: severity_rank.get(r.severity, 4))
+
+    completed_today = WasteReport.query.filter(
+        WasteReport.status == 'completed',
+        WasteReport.updated_at >= datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    ).count()
+
+    return render_template('staff_dashboard.html',
+                            reports=pending_reports,
+                            completed_today=completed_today,
+                            get_severity_badge_class=get_severity_badge_class,
+                            get_waste_type_icon=get_waste_type_icon,
+                            get_status_badge_class=get_status_badge_class)
+
 
 @app.route('/update_status/<int:report_id>', methods=['POST'])
 @login_required
