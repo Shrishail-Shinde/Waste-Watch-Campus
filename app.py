@@ -360,6 +360,8 @@ def report(room_id):
                                     report.waste_type = waste_type
                                     if form.severity.data == "Unknown":
                                         report.severity = severity
+                                        if severity == "Unknown":
+                                            flash("AI severity detection did not return a result for this image; severity was set to Unknown. You can edit it manually if needed.", 'warning')
                             except Exception as gemini_e:
                                 logger.error(f"Gemini API error: {gemini_e}")
                                 flash(f"Gemini analysis failed: {gemini_e}", 'warning') #Inform user about failure
@@ -522,8 +524,8 @@ def analyze_waste_image(image_bytes):
     """Analyzes a waste image using Gemini Pro Vision."""
     try:
         # Check if API key is properly configured
-        if GEMINI_API_KEY == "your-gemini-api-key":
-            logger.error("Using default placeholder API key - set the GEMINI_API_KEY environment variable")
+        if not GEMINI_API_KEY or GEMINI_API_KEY == "your-gemini-api-key":
+            logger.error("GEMINI_API_KEY is missing or still set to the placeholder value")
             return "Unknown", "Unknown"
             
         logger.debug("Using configured Gemini API key")
@@ -546,7 +548,9 @@ def analyze_waste_image(image_bytes):
         image_b64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         
         # Prepare Gemini request
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # NOTE: gemini-1.5-flash was retired and now 404s on every call, which is
+        # why severity was silently coming back "Unknown" for every AI-analyzed report.
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         prompt = """Analyze this image of waste. Identify:
         1. Waste type (e.g., Paper, Plastic, E-waste, Food waste, Mixed waste, Hazardous)
